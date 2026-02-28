@@ -1,0 +1,20 @@
+{
+  "name": "biometric-db",
+  "version": "1.0.0",
+  "scripts": {
+    "db:migrate": "npx prisma migrate dev --name init",
+    "db:studio": "npx prisma studio",
+    "db:generate": "npx prisma generate"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  },
+  "description": "��#\u0000 \u0000B\u0000D\u0000_\u0000S\u0000c\u0000a\u0000n\u0000_\u0000F\u0000a\u0000c\u0000e\u0000\r\u0000 \u0000",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

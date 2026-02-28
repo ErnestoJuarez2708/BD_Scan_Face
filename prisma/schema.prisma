@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserType {
+  user_type_id Int    @id @default(autoincrement())
+  type_name    String @unique @db.VarChar(50)
+
+  users User[]
+
+  @@map("user_types")
+}
+
+model User {
+  user_id           Int       @id @default(autoincrement())
+  ci                String    @unique @db.VarChar(20)
+  first_name        String    @db.VarChar(100)
+  last_name         String    @db.VarChar(100)
+  email             String    @unique @db.VarChar(100)
+  phone             String?   @db.VarChar(20)
+  user_type_id      Int
+  code              Int       @unique
+  status            Boolean   @default(true)
+  registration_date DateTime  @default(now())
+
+  user_type   UserType     @relation(fields: [user_type_id], references: [user_type_id])
+  faces       Face[]
+  access_logs AccessLog[]
+
+  @@map("users")
+}
+
+model Face {
+  face_id     Int       @id @default(autoincrement())
+  user_id     Int
+  encoding    String
+  image_path  String?
+  upload_date DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@map("faces")
+}
+
+model Device {
+  device_id         Int       @id @default(autoincrement())
+  name              String    @db.VarChar(100)
+  location          String?   @db.VarChar(100)
+  ip_address        String?   @db.VarChar(50)
+  status            Boolean   @default(true)
+  registration_date DateTime  @default(now())
+
+  access_logs AccessLog[]
+
+  @@map("devices")
+}
+
+model AccessLog {
+  log_id      Int       @id @default(autoincrement())
+  user_id     Int?
+  device_id   Int
+  access_date DateTime  @default(now())
+  confidence  Decimal   @db.Decimal(5, 2)
+  access_type String?   @db.VarChar(20)
+  status      String?   @db.VarChar(20)
+  enterCode   Boolean   @default(false)
+
+  user   User?   @relation(fields: [user_id], references: [user_id])
+  device Device  @relation(fields: [device_id], references: [device_id])
+
+  @@map("access_logs")
+}
