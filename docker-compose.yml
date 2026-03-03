@@ -1,18 +1,29 @@
-version: '3.8'
-
-services:
-  postgres:
+version: '3.7'
+services: 
+  postgres: 
     image: postgres:15
-    container_name: biometric_db
     restart: always
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: biometric
-    ports:
+    environment: 
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=prisma
+    ports: 
       - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
+    networks: 
+      - prisma-network 
+    healthcheck: 
+      test: ["CMD-SHELL", "pg_isready -U prisma -d postgres"] 
+      interval: 5s
+      timeout: 2s
+      retries: 20
+    volumes: 
+      - postgres_data:/var/lib/postgresql/data
+    command: postgres -c listen_addresses='*'
+    logging: 
+      options: 
+        max-size: "10m"
+        max-file: "3"
+networks: 
+  prisma-network: 
+volumes: 
+  postgres_data: 
