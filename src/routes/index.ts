@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import facesRoutes from './faces.routes.ts';
+import facesRoutes from './faces.routes';
 
 const apiRouter = Router();
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as facesController from '../controllers/faces.controller.ts';
+import * as facesController from '../controllers/faces.controller';
 
 const router = Router();
 

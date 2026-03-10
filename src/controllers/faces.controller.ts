@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import * as faceService from '../services/face.service.ts';
+import * as faceService from '../services/face.service';
 
 interface RegisterFaceBody {
   encoding: string;
