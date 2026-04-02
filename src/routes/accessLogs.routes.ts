@@ -1,13 +1,11 @@
 import { Router } from "express";
-import { recognizeFace } from "../controllers/accessLogs.controller";
-import { upload } from "../middlewares/multer.middleware";
+import {registerAccess } from "../controllers/accessLogs.controller";
 
 const router = Router();
 
 router.post(
-  "/recognize",
-  upload.single("file"),
-  recognizeFace
+  "/register",
+  registerAccess
 );
 
 export default router;
