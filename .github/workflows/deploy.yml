@@ -50,34 +50,37 @@ jobs:
               sudo usermod -aG docker ec2-user
             fi
 
-            # 🔧 Instalar Docker Compose (binario)
-            if ! command -v docker-compose &> /dev/null; then
-              sudo curl -L https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-$(uname -s)-$(uname -m) \
-                -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-            fi
+            # 🔌 Instalar Docker Compose como PLUGIN (no binario separado)
+            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+            mkdir -p $DOCKER_CONFIG/cli-plugins
+            curl -SL https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-linux-x86_64 \
+              -o $DOCKER_CONFIG/cli-plugins/docker-compose
+            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
-            # 🚀 Instalar Buildx (FIX DEL ERROR)
-            if ! docker buildx version &> /dev/null; then
-              mkdir -p ~/.docker/cli-plugins
-              curl -SL https://github.com/docker/buildx/releases/latest/download/buildx-linux-amd64 \
-                -o ~/.docker/cli-plugins/docker-buildx
-              chmod +x ~/.docker/cli-plugins/docker-buildx
-            fi
+            # 🚀 Instalar Buildx como PLUGIN
+            mkdir -p $HOME/.docker/cli-plugins
+            curl -SL https://github.com/docker/buildx/releases/download/v0.19.3/buildx-v0.19.3.linux-amd64 \
+              -o $HOME/.docker/cli-plugins/docker-buildx
+            chmod +x $HOME/.docker/cli-plugins/docker-buildx
 
-            docker buildx create --use || true
+            # Also install both plugins for root (needed if docker daemon requires root)
+            sudo mkdir -p /root/.docker/cli-plugins
+            sudo curl -SL https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-linux-x86_64 \
+              -o /root/.docker/cli-plugins/docker-compose
+            sudo chmod +x /root/.docker/cli-plugins/docker-compose
+            sudo curl -SL https://github.com/docker/buildx/releases/download/v0.19.3/buildx-v0.19.3.linux-amd64 \
+              -o /root/.docker/cli-plugins/docker-buildx
+            sudo chmod +x /root/.docker/cli-plugins/docker-buildx
+
+            docker buildx create --use --name mybuilder || docker buildx use mybuilder
             docker buildx inspect --bootstrap
 
             cd /home/ec2-user/backend
-
-            # 🔐 ENV backend
             echo "${{ secrets.BACKEND_ENV }}" > .env
 
-            # 🧹 Reiniciar contenedores
-            sudo /usr/local/bin/docker-compose down || true
-
-            # 🚀 Build + Run
-            sudo /usr/local/bin/docker-compose up -d --build
+            # ✅ Usar "docker compose" (plugin) en vez de "docker-compose" (binario)
+            docker compose down || true
+            docker compose up -d --build
 
           EOF
 
