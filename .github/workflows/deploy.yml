@@ -37,11 +37,10 @@ jobs:
 
       - name: ⚙️ Configurar backend + Docker
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
 
             # Instalar Docker si no existe
-            if ! command -v docker &> /dev/null
-            then
+            if ! command -v docker &> /dev/null; then
               sudo yum update -y
               sudo amazon-linux-extras install docker -y
               sudo systemctl start docker
@@ -49,27 +48,26 @@ jobs:
               sudo usermod -aG docker ec2-user
             fi
 
-            # Instalar Docker Compose si no existe
-            if ! command -v docker-compose &> /dev/null
-            then
-              sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m) -o /usr/local/bin/docker-compose
+            # Instalar Docker Compose V1 standalone si no existe
+            if ! command -v docker-compose &> /dev/null; then
+              sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-$(uname -s)-$(uname -m)" \
+                -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
             fi
 
-            cd backend
+            cd /home/ec2-user/backend
 
-            # Crear .env backend
             echo "${{ secrets.BACKEND_ENV }}" > .env
 
-            # Levantar backend
-            sudo docker compose down
-            sudo docker compose up -d --build
+            # Usar sudo + ruta absoluta para evitar problemas de PATH
+            sudo /usr/local/bin/docker-compose down
+            sudo /usr/local/bin/docker-compose up -d --build
 
           EOF
 
       - name: 🌐 Build + Deploy frontend
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
 
             cd frontend
 
