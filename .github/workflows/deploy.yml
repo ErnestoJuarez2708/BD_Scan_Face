@@ -1,0 +1,70 @@
+name: 🚀 Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configurar SSH
+        run: |
+          echo "${{ secrets.EC2_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      # ======================
+      # 📦 BACKEND
+      # ======================
+      - name: 📤 Copiar backend a EC2
+        run: |
+          scp -i key.pem -o StrictHostKeyChecking=no -r backend ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/
+
+      - name: ⚙️ Configurar backend en EC2
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            
+            # Instalar Docker si no existe
+            sudo apt update -y
+            sudo apt install -y docker.io docker-compose
+
+            sudo systemctl start docker
+            sudo systemctl enable docker
+
+            # Crear .env backend
+            echo "${{ secrets.BACKEND_ENV }}" > /home/ubuntu/backend/.env
+
+            cd /home/ubuntu/backend
+
+            # Levantar backend
+            sudo docker-compose down
+            sudo docker-compose up -d --build
+
+          EOF
+
+      # ======================
+      # 🌐 FRONTEND
+      # ======================
+      - name: 📤 Copiar frontend a EC2
+        run: |
+          scp -i key.pem -o StrictHostKeyChecking=no -r frontend ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/
+
+      - name: ⚙️ Configurar frontend en EC2
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            
+            # Crear .env frontend
+            echo "${{ secrets.FRONTEND_ENV }}" > /home/ubuntu/frontend/.env
+
+            cd /home/ubuntu/frontend
+
+            # Build y levantar frontend
+            sudo docker-compose down
+            sudo docker-compose up -d --build
+
+          EOF
