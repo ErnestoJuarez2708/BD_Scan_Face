@@ -26,6 +26,15 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             rm -rf backend frontend dist
           EOF
+      - name: 🧹 Limpiar disco EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
+            # Eliminar imágenes/contenedores/volúmenes sin uso
+            docker system prune -af --volumes
+            # Ver espacio disponible
+            df -h /
+          EOF
 
       - name: 📤 Copiar backend
         run: |
