@@ -7,16 +7,18 @@ import apiRouter from './routes/index';
 
 const app = express();
 
+const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
+
 const server = http.createServer(app);
 
 export const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: frontendURL,
   },
 });
 
 app.use(cors({
-  origin: "http://localhost:5173"
+  origin: frontendURL
 }));
 
 app.use(express.json());
