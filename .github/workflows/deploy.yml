@@ -69,23 +69,32 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
 
-            cd frontend
+            set -e  # Detener si cualquier comando falla
 
-            # Crear .env frontend
+            cd /home/ec2-user/frontend
+
             echo "${{ secrets.FRONTEND_ENV }}" > .env
 
-            # Instalar Node si no existe
-            if ! command -v npm &> /dev/null
-            then
-              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-              sudo yum install -y nodejs
+            # Instalar Node via nvm si no existe
+            if ! command -v npm &> /dev/null; then
+              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+              export NVM_DIR="$HOME/.nvm"
+              source "$NVM_DIR/nvm.sh"
+              nvm install 20
+              nvm use 20
+            else
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
             fi
 
             npm install
             npm run build
 
-            # Servir con nginx simple (opcional)
-            sudo yum install -y nginx
+            # Instalar nginx con amazon-linux-extras
+            if ! command -v nginx &> /dev/null; then
+              sudo amazon-linux-extras install nginx1 -y
+            fi
+
             sudo systemctl start nginx
             sudo systemctl enable nginx
 
